@@ -21,6 +21,17 @@
         <h1>This is a contact page!</h1>
         <p>This is my first website. I'm learning web development from scratch.</p>
         
+        <form id ="contact-form">
+            <label for="name">Name:</label><br />
+            <input type="text" id="name" name="name" required /><br /><br />
+
+            <label for="message">Message:</label><br />
+            <textarea name="message" id="message" maxlength="250" required></textarea><br />
+            <small id="char-count">Characters left: 250</small><br /><br />
+
+            <button type="submit">Send</button>
+
+        </form>
     </section>
 
     <button onclick="sayHello()">Click me!</button>

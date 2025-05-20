@@ -103,11 +103,12 @@ body {
     color: #eee;
   }
 
-  body.dark h1,
-  body.dark h2,
-  body.dark h3,
-  body.dark p,
-  body.dark button,
-  body.dark a {
-    color: #ddd;
+  body.dark input,
+  body.dark textarea {
+    background-color: #333;
+    color: #eee;
+    border: 1px solid #555; 
+    padding: 8px; 
+    border-radius: 4px;
+    max-width: 500px;
   }

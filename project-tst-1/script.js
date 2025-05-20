@@ -1,7 +1,8 @@
+// Initital test button
 function sayHello() {
     alert('You clicked the button! Welcome to your first site.');
   }
-  
+// toggle dark mode
   if (localStorage.getItem("theme") === "dark") {
     document.body.classList.add("dark");
   }
@@ -19,3 +20,14 @@ function sayHello() {
       localStorage.setItem("theme", "light");
     }
   });
+ //Message char count
+  const messageInput = document.getElementById("message");
+  const charCount = document.getElementById("char-count");
+
+  if (messageInput && charCount) {
+    messageInput.addEventListener("input", () => {
+      const remaining = 250 - messageInput.value.length;
+      charCount.textContent = `characters left: ${remaining}`;
+    })
+  }
+  
