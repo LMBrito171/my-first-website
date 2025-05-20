@@ -8,18 +8,18 @@ function sayHello() {
   }
   
   const button = document.getElementById("toggle-theme");
+
+  if (button) {
+    button.addEventListener("click", () => {
+      document.body.classList.toggle("dark");
   
-  button.addEventListener("click", () => {
-    // Toggle the dark class
-    document.body.classList.toggle("dark");
-  
-    // Save the current theme to localStorage
-    if (document.body.classList.contains("dark")) {
-      localStorage.setItem("theme", "dark");
-    } else {
-      localStorage.setItem("theme", "light");
-    }
-  });
+      if (document.body.classList.contains("dark")) {
+        localStorage.setItem("theme", "dark");
+      } else {
+        localStorage.setItem("theme", "light");
+      }
+    });
+  }
  //Message char count
   const messageInput = document.getElementById("message");
   const charCount = document.getElementById("char-count");
@@ -40,7 +40,7 @@ function sayHello() {
 
   container.innerHTML = ""; // Clear existing content
 
-  blogPosts.forEach(post => {
+  blogPosts.forEach((post, index) => {
     const article = document.createElement("article");
     article.className = "blog-post";
 
@@ -48,7 +48,7 @@ function sayHello() {
       <h2>${post.title}</h2>
       <p><small>Posted on ${post.date}</small></p>
       <p>${post.summary}</p>
-      <a href="${post.link}">Read More</a>
+      <a href="post.html?id=${index}">Read More</a>
     `;
 
     container.appendChild(article);
@@ -78,4 +78,37 @@ function saveAndRenderPosts() {
   renderPosts();
 }
 
-  renderBlogPosts();
+  renderPosts();
+
+  function loadSinglePost () {
+    const container = document.getElementById("post-content");
+    if (!container) return 
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get("id");
+    
+    if (id === null) {
+      container.innerHTML = "<p>Post not foind.</p>";
+      return;
+
+    }
+
+    const posts = JSON.parse(localStorage.getItem("blogPosts")) || [];
+
+    const post = posts[id];
+    if (!post) {
+      container.innerHTML = "<p>Post not found.</p>";
+      return
+    }
+
+    container.innerHTML = `
+      <article class="blog-post">
+        <h2>${post.title}</h2>
+        <p><small>Posted on ${post.date}</small></p>
+        <p>${post.summary}</p>
+        <a href="blog.html">Back to blog</a>
+      </article>
+  `;
+  }
+
+  loadSinglePost ();
