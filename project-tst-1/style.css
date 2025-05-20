@@ -90,4 +90,15 @@ body {
     }
   }
 
-  
+  body.dark {
+    background-color: #111;
+    color: #eee;
+  }
+
+  body.dark nav {
+    background-color: #222;
+  }
+
+  body.dark a {
+    color: #ddd;
+  }
