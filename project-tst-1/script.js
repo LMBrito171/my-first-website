@@ -32,37 +32,50 @@ function sayHello() {
   }
 
   
-    const blogPosts = [{
-      title: "How I built my first Website",
-      date: "May 20th, 2025",
-      summary: "this is a short summary of the article(...)",
-      link: "#"
-    },
-    {
-      title: "Dark Mode with JS",
-      date: "May 19th, 2025",
-      summary: "Dark mode isn’t just cool — it’s a great practice for accessibility and user comfort. Here's how I made it work persistently.",
-      link: "#"
+  const blogPosts = JSON.parse(localStorage.getItem("blogPosts")) || [];
 
-    }
-  ];
-  function renderBlogPosts () {
-    const container = document.getElementById("blog-posts");
-    if (!container) return;
+  function renderPosts() {
+  const container = document.getElementById("blog-posts");
+  if (!container) return;
 
-    blogPosts.forEach(post => {
-      const article = document.createElement("article");
-      article.className = "blog-post";
+  container.innerHTML = ""; // Clear existing content
 
-      article.innerHTML= `
-        <h2>${post.title}</h2>
-        <p><small>Posted on ${post.date}</small></p>
-        <p>${post.summary}</p>
-        <a href="${post.link}">Read More</a>
-      `;
+  blogPosts.forEach(post => {
+    const article = document.createElement("article");
+    article.className = "blog-post";
 
-      container.appendChild(article);
-    });
-  }
+    article.innerHTML = `
+      <h2>${post.title}</h2>
+      <p><small>Posted on ${post.date}</small></p>
+      <p>${post.summary}</p>
+      <a href="${post.link}">Read More</a>
+    `;
+
+    container.appendChild(article);
+  });
+}
+
+const form = document.getElementById("post-form");
+
+if (form) {
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const title = document.getElementById("post-title").value;
+    const date = document.getElementById("post-date").value;
+    const summary = document.getElementById("post-summary").value;
+    const link = document.getElementById("post-link").value;
+
+    blogPosts.unshift({ title, date, summary, link }); // Add to beginning
+    saveAndRenderPosts();
+
+    form.reset();
+  });
+}
+
+function saveAndRenderPosts() {
+  localStorage.setItem("blogPosts", JSON.stringify(blogPosts));
+  renderPosts();
+}
 
   renderBlogPosts();
