@@ -175,11 +175,15 @@ if (form) {
   loadSinglePost ();
 
   const ADMIN_EMAILS = ["batataplaygames@gmail.com"];
+
   const loginGoogle = document.getElementById("login-google");
   const loginEmail  = document.getElementById("login-email");
   const logoutBtn = document.getElementById("logout");
   const formWrapper = document.getElementById("post-form");
 
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("password");
+  
   if (loginGoogle) {
     loginGoogle.addEventListener("click", () =>{
       signInWithPopup(auth, provider).catch(console.error);
@@ -199,25 +203,30 @@ if (form) {
     });
   }
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(firebase.auth, (user) => {
     if (user) {
-      console.log("Logged In", user.email);
-
-      logoutBtn.style.display = "inline-block";
-      loginGoogle.style.display = "none";
-      loginEmail.style.display = "none";
-
+      console.log("Logged in as:", user.email);
+  
+      // Toggle visibility
+      loginGoogle?.classList.add("hidden");
+      loginEmail?.classList.add("hidden");
+      emailInput?.classList.add("hidden");
+      passwordInput?.classList.add("hidden");
+      logoutBtn?.classList.remove("hidden");
+  
+      // Show form only for admins
       if (ADMIN_EMAILS.includes(user.email)) {
-        
-        formWrapper?.classList.add("hidden");
+        formWrapper?.classList.remove("hidden");
       } else {
         formWrapper?.classList.add("hidden");
       }
-
     } else {
-      logoutBtn.style.display = "none";
-      loginGoogle.style.display = "inline-block";
-      loginEmail.style.display = "insline-block";
+      // Show login again
+      loginGoogle?.classList.remove("hidden");
+      loginEmail?.classList.remove("hidden");
+      emailInput?.classList.remove("hidden");
+      passwordInput?.classList.remove("hidden");
+      logoutBtn?.classList.add("hidden");
       formWrapper?.classList.add("hidden");
     }
-    });
+  });
