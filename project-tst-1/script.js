@@ -230,3 +230,9 @@ if (form) {
       formWrapper?.classList.add("hidden");
     }
   });
+
+  const userGreeting = document.getElementById("user-greeting");
+
+  if (userGreeting) {
+    userGreeting.textContent = user ? `welcome, ${user.email}`: ""; 
+  }
