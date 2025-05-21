@@ -10,6 +10,9 @@
 
 /*Base classes*/
 
+.hidden { 
+  display: none;
+}
 
 .blog-post{
   background: #f2f2f2;

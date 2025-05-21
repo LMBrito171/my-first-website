@@ -1,5 +1,7 @@
  // Firebase Integration
- import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+ import { 
+  initializeApp 
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
  
  import {
   getFirestore,
@@ -10,6 +12,14 @@
   doc,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+import {
+  getAuth,
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
  const firebaseConfig = {
    apiKey: "AIzaSyAtycJr3pfVBq7FjNLq8aY6vjh2hNgUoYk",
@@ -20,10 +30,15 @@
    appId: "1:92503656162:web:07ee9aef53fefdeb94c0bb"
  };
 
+
+
  const app = initializeApp(firebaseConfig);
  const db = getFirestore(app);
-
+ const auth = getAuth(app);
+ const provider = new GoogleAuthProvider ();
  window.firebase = { db, collection, getDocs, addDoc };
+ window.firebase.auth = auth;
+ window.firebase.provider = provider; 
 
 // toggle dark mode
   if (localStorage.getItem("theme") === "dark") {
@@ -76,7 +91,6 @@
           <h2>${post.title}</h2>
           <p><small>Posted on ${post.date}</small></p>
           <p>${post.summary}</p>
-          <p>${post.content}</p>
           <a href="post.html?id=${doc.id}">Read More</a>
         `;
   
@@ -129,8 +143,8 @@ if (form) {
     const id = urlParams.get("id");
     
     if (!id) {
-      container.innerHTML = "<p>Post not found.</p>";
-      return;
+      container.innerHTML = `<p>Post not found.</p>`;
+      return; 
 
     }
 
@@ -154,8 +168,56 @@ if (form) {
       }
     } catch (error) {
       console.error("error loading post:", error);
-      container.innerHTML = `<p>Failed to load post.<p>`
+      container.innerHTML = `<p>Failed to load post.<p>`;
     }
 
   }
   loadSinglePost ();
+
+  const ADMIN_EMAILS = ["batataplaygames@gmail.com"];
+  const loginGoogle = document.getElementById("login-google");
+  const loginEmail  = document.getElementById("login-email");
+  const logoutBtn = document.getElementById("logout");
+  const formWrapper = document.getElementById("post-form");
+
+  if (loginGoogle) {
+    loginGoogle.addEventListener("click", () =>{
+      signInWithPopup(auth, provider).catch(console.error);
+    });
+  }
+
+  if (loginEmail) {
+    loginEmail.addEventListener("click", () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      signInWithEmailAndPassword(auth, email, password).catch(console.error)
+    });
+  };
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      signOut(auth).catch(console.error);
+    });
+  }
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      console.log("Logged In", user.email);
+
+      logoutBtn.style.display = "inline-block";
+      loginGoogle.style.display = "none";
+      loginEmail.style.display = "none";
+
+      if (ADMIN_EMAILS.includes(user.email)) {
+        
+        formWrapper?.classList.add("hidden");
+      } else {
+        formWrapper?.classList.add("hidden");
+      }
+
+    } else {
+      logoutBtn.style.display = "none";
+      loginGoogle.style.display = "inline-block";
+      loginEmail.style.display = "insline-block";
+      formWrapper?.classList.add("hidden");
+    }
+    });

@@ -20,9 +20,18 @@
         </ul>
     </nav>
 
+    <div id="auth-controls">
+        <button id="login-google">Login with Google</button>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password">
+        <button id="login-email">Login with Email</button>
+        <button id="logout" style="display:none;"></button>
+    </div>
+
     <section>
-        <h2>Write a new post</h2>
+        
         <form id="post-form">
+            <h2>Write a new post</h2>
             <input type="text" id="post-title" placeholder="Title" required><br><br>
             <input type="text" id="post-date" placeholder="Date (e.g., May 20th, 2025)" required><br><br>
             <textarea id="post-summary" placeholder="Summary" required></textarea><br><br>
