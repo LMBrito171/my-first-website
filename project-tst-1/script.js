@@ -1,7 +1,30 @@
-// Initital test button
-function sayHello() {
-    alert('You clicked the button! Welcome to your first site.');
-  }
+ // Firebase Integration
+ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+ 
+ import {
+  getFirestore,
+  collection,
+  getDocs,
+  getDoc,
+  addDoc,
+  doc,
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+
+ const firebaseConfig = {
+   apiKey: "AIzaSyAtycJr3pfVBq7FjNLq8aY6vjh2hNgUoYk",
+   authDomain: "caos-midia.firebaseapp.com",
+   projectId: "caos-midia",
+   storageBucket: "caos-midia.appspot.com",
+   messagingSenderId: "92503656162",
+   appId: "1:92503656162:web:07ee9aef53fefdeb94c0bb"
+ };
+
+ const app = initializeApp(firebaseConfig);
+ const db = getFirestore(app);
+
+ window.firebase = { db, collection, getDocs, addDoc };
+
 // toggle dark mode
   if (localStorage.getItem("theme") === "dark") {
     document.body.classList.add("dark");
@@ -34,81 +57,105 @@ function sayHello() {
   
   const blogPosts = JSON.parse(localStorage.getItem("blogPosts")) || [];
 
-  function renderPosts() {
-  const container = document.getElementById("blog-posts");
-  if (!container) return;
-
-  container.innerHTML = ""; // Clear existing content
-
-  blogPosts.forEach((post, index) => {
-    const article = document.createElement("article");
-    article.className = "blog-post";
-
-    article.innerHTML = `
-      <h2>${post.title}</h2>
-      <p><small>Posted on ${post.date}</small></p>
-      <p>${post.summary}</p>
-      <a href="post.html?id=${index}">Read More</a>
-    `;
-
-    container.appendChild(article);
-  });
-}
+  async function renderPosts() {
+    const container = document.getElementById("blog-posts");
+    if (!container) return;
+  
+    container.innerHTML = ""; // Clear existing posts
+  
+    try {
+      const querySnapshot = await getDocs(collection(firebase.db, "posts"));
+  
+      querySnapshot.forEach((doc) => {
+        const post = doc.data();
+  
+        const article = document.createElement("article");
+        article.className = "blog-post";
+  
+        article.innerHTML = `
+          <h2>${post.title}</h2>
+          <p><small>Posted on ${post.date}</small></p>
+          <p>${post.summary}</p>
+          <p>${post.content}</p>
+          <a href="post.html?id=${doc.id}">Read More</a>
+        `;
+  
+        container.appendChild(article);
+      });
+    } catch (error) {
+      console.error("Error getting posts: ", error);
+      container.innerHTML = "<p>Failed to load posts.</p>";
+    }
+  }
 
 const form = document.getElementById("post-form");
 
 if (form) {
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const title = document.getElementById("post-title").value;
     const date = document.getElementById("post-date").value;
     const summary = document.getElementById("post-summary").value;
+    const content = document.getElementById("post-content").value;
     const link = document.getElementById("post-link").value;
 
-    blogPosts.unshift({ title, date, summary, link }); // Add to beginning
-    saveAndRenderPosts();
+    try {
+      await addDoc(collection(firebase.db, "posts"), {
+        title,
+        date,
+        summary,
+        content,
+        link
+      });
 
-    form.reset();
+      form.reset();
+      renderPosts(); // Re-fetch and display updated posts
+    } catch (error) {
+      console.error("Error adding document: ", error);
+    }
   });
 }
 
-function saveAndRenderPosts() {
-  localStorage.setItem("blogPosts", JSON.stringify(blogPosts));
-  renderPosts();
-}
+
 
   renderPosts();
 
-  function loadSinglePost () {
+  async function loadSinglePost () {
     const container = document.getElementById("post-content");
-    if (!container) return 
+    if (!container) return;
 
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get("id");
     
-    if (id === null) {
-      container.innerHTML = "<p>Post not foind.</p>";
+    if (!id) {
+      container.innerHTML = "<p>Post not found.</p>";
       return;
 
     }
 
-    const posts = JSON.parse(localStorage.getItem("blogPosts")) || [];
+    try {
+      const docRef = doc(firebase.db, "posts", id);
+      const docSnap = await getDoc(docRef);
 
-    const post = posts[id];
-    if (!post) {
-      container.innerHTML = "<p>Post not found.</p>";
-      return
+      if (docSnap.exists()) {
+        const post = docSnap.data();
+
+        container.innerHTML = `
+        <article class="blog-post">
+          <h2>${post.title}</h2>
+          <p><small>Posted on ${post.date}</small></p>
+          <p>${post.summary}</p>
+          <p>${post.content}</p>
+          <a href="blog.html">Back to blog</a>
+        </article>`;
+      } else {
+        container.innerHTML = `<p>Post not found.<p>`;
+      }
+    } catch (error) {
+      console.error("error loading post:", error);
+      container.innerHTML = `<p>Failed to load post.<p>`
     }
 
-    container.innerHTML = `
-      <article class="blog-post">
-        <h2>${post.title}</h2>
-        <p><small>Posted on ${post.date}</small></p>
-        <p>${post.summary}</p>
-        <a href="blog.html">Back to blog</a>
-      </article>
-  `;
   }
-
   loadSinglePost ();

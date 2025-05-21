@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
 </head>
 <body>
     <nav>
@@ -24,6 +26,7 @@
             <input type="text" id="post-title" placeholder="Title" required><br><br>
             <input type="text" id="post-date" placeholder="Date (e.g., May 20th, 2025)" required><br><br>
             <textarea id="post-summary" placeholder="Summary" required></textarea><br><br>
+            <textarea id="post-content" placeholder="Main content of the post" required></textarea><br><br>
             <input type="text" id="post-link" placeholder="Link or slug (e.g., # or post.html)" required><br><br>
             <button type="submit">Add post</button>
         </form>
@@ -39,6 +42,6 @@
 
     </section>
 
-    <Script src="script.js"></Script>
+    <Script type="module" src="script.js"></Script>
 </body>
 </html>
