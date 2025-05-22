@@ -9,7 +9,10 @@
   getDocs,
   getDoc,
   addDoc,
+  updateDoc,
+  deleteDoc,
   doc,
+  serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 import {
@@ -21,6 +24,8 @@ import {
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+
 
  const firebaseConfig = {
    apiKey: "AIzaSyAtycJr3pfVBq7FjNLq8aY6vjh2hNgUoYk",
@@ -70,11 +75,12 @@ import {
     })
   }
 
-  
-  const blogPosts = JSON.parse(localStorage.getItem("blogPosts")) || [];
+  //Blog posts
 
-  async function renderPosts() {
+  async function renderPosts(user) {
     const container = document.getElementById("blog-posts");
+    //const user = firebase.auth.currentUser;
+    const isAdmin = user && ADMIN_EMAILS.includes(user.email);
     if (!container) return;
   
     container.innerHTML = ""; // Clear existing posts
@@ -82,17 +88,25 @@ import {
     try {
       const querySnapshot = await getDocs(collection(firebase.db, "posts"));
   
-      querySnapshot.forEach((doc) => {
-        const post = doc.data();
+      querySnapshot.forEach((docSnap) => {
+        const post = docSnap.data();
+        const docId = docSnap.id;
+
+        const timestamp = post.createdAt;
+        const formattedDate = timestamp?.toDate?.().toLocaleDateString("pt-BR") || "unknown";
   
         const article = document.createElement("article");
         article.className = "blog-post";
   
         article.innerHTML = `
           <h2>${post.title}</h2>
-          <p><small>Posted on ${post.date}</small></p>
+          <p><small>Posted on ${formattedDate}</small></p>
           <p>${post.summary}</p>
-          <a href="post.html?id=${doc.id}">Read More</a>
+          <a href="post.html?id=${docId}">Read More</a>
+          ${isAdmin? `
+            <button class="edit-post" data-id="${docId}">Edit</button>
+            <button class="delete-post" data-id="${docId}">Delete</button>`
+            : ""}
         `;
   
         container.appendChild(article);
@@ -121,10 +135,12 @@ if (form) {
         date,
         summary,
         content,
-        link
+        link,
+        createdAt:serverTimestamp(),
       });
 
       form.reset();
+      window.location.href = "blog.html";
       renderPosts(); // Re-fetch and display updated posts
     } catch (error) {
       console.error("Error adding document: ", error);
@@ -134,48 +150,100 @@ if (form) {
 
 
 
-  renderPosts();
+  // renderPosts();
+
+  document.addEventListener("click", async (e) => {
+    //Delete post
+    if (e.target.classList.contains("delete-post")) {
+      const id = e.target.dataset.id;
+      if (!id) return alert ("Missing Post ID!");
+
+      if(confirm("Are you sure you want to delete this post?")) {
+        try {
+
+          await deleteDoc(doc(firebase.db, "posts", id));
+          renderPosts(firebase.auth.currentUser);
+        } catch (error) {
+          console.error("Delete Failed:", error);
+        }
+      }
+    }
+
+    //Edit post
+    if (e.target.classList.contains("edit-post")) {
+      const id = e.target.dataset.id;
+      if (!id) return alert("Missing post ID!");
+
+      try {
+
+        const postRef = doc(firebase.db, "posts", id);
+        const postSnap = await getDoc(postRef);
+        
+        if (postSnap.exists()) {
+          const post = postSnap.data();
+          
+          const newTitle = prompt("Edit Title:", post.title);
+          const newContent = prompt("Edit content:", post.content);
+          const newSummary = prompt("Edit summary:", post.summary);
+          
+          if (newTitle && newContent) {
+            await updateDoc(postRef, {
+              title: newTitle,
+              content: newContent,
+              summary: newSummary
+            });
+            renderPosts(firebase.auth.currentUser);
+          }
+        }
+      } catch (error) {
+        console.error("Edit Failed:", error);
+      }
+    }
+  });
 
   async function loadSinglePost () {
     const container = document.getElementById("post-content");
     if (!container) return;
-
+  
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get("id");
-    
+  
     if (!id) {
       container.innerHTML = `<p>Post not found.</p>`;
-      return; 
-
+      return;
     }
-
+  
+    console.log("Loading post ID:", id);
+  
     try {
       const docRef = doc(firebase.db, "posts", id);
       const docSnap = await getDoc(docRef);
-
+  
       if (docSnap.exists()) {
         const post = docSnap.data();
-
+  
         container.innerHTML = `
-        <article class="blog-post">
-          <h2>${post.title}</h2>
-          <p><small>Posted on ${post.date}</small></p>
-          <p>${post.summary}</p>
-          <p>${post.content}</p>
-          <a href="blog.html">Back to blog</a>
-        </article>`;
+          <article class="blog-post">
+            <h2>${post.title}</h2>
+            <p><small>Posted on ${post.createdAt?.toDate?.().toLocaleDateString("pt-BR") || "Unknown"}</small></p>
+            <p>${post.summary}</p>
+            <p>${post.content}</p>
+            <a href="blog.html">Back to blog</a>
+          </article>
+        `;
       } else {
-        container.innerHTML = `<p>Post not found.<p>`;
+        console.warn("Post not found for ID:", id);
+        container.innerHTML = `<p>Post not found.</p>`;
       }
     } catch (error) {
-      console.error("error loading post:", error);
-      container.innerHTML = `<p>Failed to load post.<p>`;
+      console.error("Error loading post:", error);
+      container.innerHTML = `<p>Failed to load post.</p>`;
     }
-
   }
   loadSinglePost ();
 
-  const ADMIN_EMAILS = ["batataplaygames@gmail.com"];
+  //admin logic
+  const ADMIN_EMAILS = ["batataplaygames@gmail.com", "test@test.com"];
 
   const loginGoogle = document.getElementById("login-google");
   const loginEmail  = document.getElementById("login-email");
@@ -185,6 +253,7 @@ if (form) {
   const emailInput = document.getElementById("email");
   const passwordInput = document.getElementById("password");
   
+  //Login and register
   if (loginGoogle) {
     loginGoogle.addEventListener("click", () =>{
       signInWithPopup(auth, provider).catch(console.error);
@@ -227,8 +296,33 @@ if (form) {
         });
     });
   }
-
+ //visibility admin/non admin
   onAuthStateChanged(firebase.auth, (user) => {
+
+    const editorContainer = document.getElementById("editor");
+    const publishBtn  = document.getElementById("publish-post");
+
+    if(editorContainer && publishBtn) {
+      const quill = new Quill('#editor', {
+        theme: 'snow'
+      });
+
+      publishBtn.addEventListener("click", async () => {
+        const title = prompt("Title:");
+        const content = quill.root.innerHTML;
+        const summary = quill.getText().substring(0, 300) + "...";
+
+        await addDoc(collection(firebase.db, "posts"), {
+          title,
+          content,
+          summary,
+          createdAt: serverTimestamp()
+        });
+        alert("Post published!");
+      });
+    }
+
+
     if (user) {
       console.log("Logged in as:", user.email);
   
@@ -244,7 +338,8 @@ if (form) {
         formWrapper?.classList.remove("hidden");
       } else {
         formWrapper?.classList.add("hidden");
-      }
+      } 
+      renderPosts(user);
     } else {
       // Show login again
       loginGoogle?.classList.remove("hidden");
@@ -253,11 +348,30 @@ if (form) {
       passwordInput?.classList.remove("hidden");
       logoutBtn?.classList.add("hidden");
       formWrapper?.classList.add("hidden");
+      renderPosts(null)
     }
+
+    if (window.location.pathname.includes("new-post.html")) {
+      if (!user || !ADMIN_EMAILS.includes(user.email)) {
+        alert("Only admins can create posts!");
+        window.location.href = "blog.html";
+        return;
+      }
+    }
+
+    const newPostLink = document.querySelector('a[href="new-post.html"]');
+    if (newPostLink && (!user || !ADMIN_EMAILS.includes(user.email))) {
+      newPostLink.remove();
+    }
+
+    const userGreeting = document.getElementById("user-greeting");
+    if (userGreeting) {
+      userGreeting.textContent = user ? `welcome, ${user.email}`: ""; 
+
+      console.log("Auth check, user:", user?.email);
+  }
   });
 
-  const userGreeting = document.getElementById("user-greeting");
+  
 
-  if (userGreeting) {
-    userGreeting.textContent = user ? `welcome, ${user.email}`: ""; 
-  }
+  

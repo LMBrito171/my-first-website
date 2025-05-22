@@ -10,6 +10,17 @@
 
 /*Base classes*/
 
+.blog-post {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.blog-post p{
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+
 .hidden { 
   display: none;
 }
@@ -34,7 +45,22 @@
 .blog-post a:hover {
   text-decoration: underline;
 }
+
+.editor-wrapper{
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+}
 /*Everything else (Pasta code, yea)*/
+
+#editor { 
+  min-height: 300px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #2c2c2c;
+  padding: 1rem;
+  overflow-y: auto;
+}
 
 
 section {
@@ -109,6 +135,20 @@ body {
   /* Responsive Layout for Small screens */
 
   @media (max-width: 600px) {
+
+    .editor-wrapper {
+      padding: 10px;
+    }
+
+    #editor {
+      min-height: 200px;
+    }
+
+    #publish-post{
+      width: 100%;
+      margin-top: 1rem;
+    }
+
     nav ul {
       flex-direction: column;
       align-items: center;
