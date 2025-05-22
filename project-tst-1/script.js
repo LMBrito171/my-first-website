@@ -180,7 +180,7 @@ if (form) {
   const loginEmail  = document.getElementById("login-email");
   const logoutBtn = document.getElementById("logout");
   const formWrapper = document.getElementById("post-form");
-
+  const registerBtn = document.getElementById("register-email")
   const emailInput = document.getElementById("email");
   const passwordInput = document.getElementById("password");
   
@@ -197,9 +197,33 @@ if (form) {
       signInWithEmailAndPassword(auth, email, password).catch(console.error)
     });
   };
+
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       signOut(auth).catch(console.error);
+    });
+  }
+
+  
+  if (registerBtn) {
+    registerBtn.addEventListener("click", () => {
+      const email = document.getElementById("reg-email").value;
+      const password = document.getElementById("reg-password").value;
+  
+      if (!email || !password) {
+        alert("Please enter email and password.");
+        return;
+      }
+  
+      createUserWithEmailAndPassword(firebase.auth, email, password)
+        .then((userCredential) => {
+          console.log("Registered and logged in:", userCredential.user.email);
+          alert("Registration successful!");
+        })
+        .catch((error) => {
+          console.error("Registration error:", error);
+          alert(error.message);
+        });
     });
   }
 
