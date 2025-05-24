@@ -94,21 +94,22 @@ import {
 
         const timestamp = post.createdAt;
         const formattedDate = timestamp?.toDate?.().toLocaleDateString("pt-BR") || "unknown";
-  
+        const author = post.author; 
         const article = document.createElement("article");
         article.className = "blog-post";
   
         article.innerHTML = `
           <h2>${post.title}</h2>
-          <p><small>Posted on ${formattedDate}</small></p>
+          <p><small>Posted on ${formattedDate} by ${author}</small></p>
           <p>${post.summary}</p>
           <a href="post.html?id=${docId}">Read More</a>
           ${isAdmin? `
-            <button class="edit-post" data-id="${docId}">Edit</button>
+            <button><a href="edit-post.html?id=${docId}">Edit</a></button>
             <button class="delete-post" data-id="${docId}">Delete</button>`
             : ""}
         `;
-  
+            // <button><a href="edit-post.html?id=${docId}">Edit</a></button>
+            // <button class="edit-post" data-id="${docId}">Edit</button>
         container.appendChild(article);
       });
     } catch (error) {
@@ -137,6 +138,7 @@ if (form) {
         content,
         link,
         createdAt:serverTimestamp(),
+        author: firebase.auth.currentUser.displayName
       });
 
       form.reset();
@@ -221,13 +223,18 @@ if (form) {
   
       if (docSnap.exists()) {
         const post = docSnap.data();
+        const createdAt = post.createdAt?.toDate?.();
+        const editedAt = post.editedAt?.toDate?.()
+        const author = post.author || "Anonymous";
+        
+        //<p>${post.summary}</p>
   
         container.innerHTML = `
           <article class="blog-post">
             <h2>${post.title}</h2>
-            <p><small>Posted on ${post.createdAt?.toDate?.().toLocaleDateString("pt-BR") || "Unknown"}</small></p>
-            <p>${post.summary}</p>
+            <p><small>Posted on ${createdAt?.toLocaleDateString("pt-BR") || "Unknown"} by ${author}</small></p>
             <p>${post.content}</p>
+            ${editedAt? `<p><small><em>Last edited on ${editedAt.toLocaleDateString("pt-BR")}</em></small></p>` : ""}
             <a href="blog.html">Back to blog</a>
           </article>
         `;
@@ -316,7 +323,8 @@ if (form) {
           title,
           content,
           summary,
-          createdAt: serverTimestamp()
+          createdAt: serverTimestamp(),
+          author: firebase.auth.currentUser.displayName,
         });
         alert("Post published!");
       });
