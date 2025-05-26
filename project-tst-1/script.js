@@ -13,6 +13,10 @@
   deleteDoc,
   doc,
   serverTimestamp,
+  query,
+  orderBy,
+  limit,
+  startAfter,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 import {
@@ -36,15 +40,16 @@ import {
    appId: "1:92503656162:web:07ee9aef53fefdeb94c0bb"
  };
 
+let lastVisiblePost = null;
 
-
- const app = initializeApp(firebaseConfig);
- const db = getFirestore(app);
- const auth = getAuth(app);
- const provider = new GoogleAuthProvider ();
- window.firebase = { db, collection, getDocs, addDoc };
- window.firebase.auth = auth;
- window.firebase.provider = provider; 
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider ();
+const POSTS_PER_PAGE = 5;
+window.firebase = { db, collection, getDocs, addDoc };
+window.firebase.auth = auth;
+window.firebase.provider = provider; 
 
 // toggle dark mode
   if (localStorage.getItem("theme") === "dark") {
@@ -77,47 +82,74 @@ import {
 
   //Blog posts
 
-  async function renderPosts(user) {
+  async function renderPosts(user, isLoadMore = false) {
     const container = document.getElementById("blog-posts");
+    const loadMoreBtn = document.getElementById("load-more");
     //const user = firebase.auth.currentUser;
-    const isAdmin = user && ADMIN_EMAILS.includes(user.email);
     if (!container) return;
-  
-    container.innerHTML = ""; // Clear existing posts
-  
-    try {
-      const querySnapshot = await getDocs(collection(firebase.db, "posts"));
-  
-      querySnapshot.forEach((docSnap) => {
-        const post = docSnap.data();
-        const docId = docSnap.id;
+    const isAdmin = user && ADMIN_EMAILS.includes(user.email);
+    const postRef = collection(firebase.db, "posts");
+    
+  let postsQuery;
 
-        const timestamp = post.createdAt;
-        const formattedDate = timestamp?.toDate?.().toLocaleDateString("pt-BR") || "unknown";
-        const author = post.author; 
-        const article = document.createElement("article");
-        article.className = "blog-post";
-  
-        article.innerHTML = `
-          <h2>${post.title}</h2>
-          <p><small>Posted on ${formattedDate} by ${author}</small></p>
-          <p>${post.summary}</p>
-          <a href="post.html?id=${docId}">Read More</a>
-          ${isAdmin? `
-            <button><a href="edit-post.html?id=${docId}">Edit</a></button>
-            <button class="delete-post" data-id="${docId}">Delete</button>`
-            : ""}
-        `;
-            // <button><a href="edit-post.html?id=${docId}">Edit</a></button>
-            // <button class="edit-post" data-id="${docId}">Edit</button>
-        container.appendChild(article);
-      });
-    } catch (error) {
-      console.error("Error getting posts: ", error);
-      container.innerHTML = "<p>Failed to load posts.</p>";
-    }
+  if (isLoadMore && lastVisiblePost) {
+    postsQuery = query(
+      postRef,
+      orderBy("createdAt", "desc"),
+      startAfter(lastVisiblePost),
+      limit(POSTS_PER_PAGE)
+    );
+  } else {
+    postsQuery = query(
+      postRef,
+      orderBy("createdAt", "desc"),
+      limit(POSTS_PER_PAGE)
+    );
+    container.innerHTML = ""; // Clear only if not loading more
   }
 
+  try {
+    const querySnapshot = await getDocs(postsQuery);
+    if (!querySnapshot.empty) {
+      lastVisiblePost = querySnapshot.docs[querySnapshot.docs.length - 1];
+    }
+
+    querySnapshot.forEach((docSnap) => {
+      const post = docSnap.data();
+      if (post.status !== "published") return;
+      const docId = docSnap.id;
+
+      const timestamp = post.createdAt;
+      const formattedDate = timestamp?.toDate?.().toLocaleDateString("pt-BR") || "unknown";
+      const author = post.author || "Anonymous";
+
+      const article = document.createElement("article");
+      article.className = "blog-post";
+
+      article.innerHTML = `
+        <h2>${post.title}</h2>
+        <p><small>Posted on ${formattedDate} by ${author}</small></p>
+        <p>${post.summary}</p>
+        <a href="post.html?id=${docId}">Read More</a><br><br>
+        ${isAdmin ? `
+          <button><a href="edit-post.html?id=${docId}">Edit</a></button>
+          <button class="delete-post" data-id="${docId}">Delete</button>` : ""}
+      `;
+
+      container.appendChild(article);
+    });
+
+    // Show or hide the Load More button
+    if (querySnapshot.size < POSTS_PER_PAGE) {
+      loadMoreBtn.style.display = "none";
+    } else {
+      loadMoreBtn.style.display = "inline-block";
+    }
+  } catch (error) {
+    console.error("Error loading posts:", error);
+    container.innerHTML = "<p>Failed to load posts.</p>";
+  }
+}
 const form = document.getElementById("post-form");
 
 if (form) {
@@ -138,7 +170,8 @@ if (form) {
         content,
         link,
         createdAt:serverTimestamp(),
-        author: firebase.auth.currentUser.displayName
+        author: firebase.auth.currentUser.displayName,
+        
       });
 
       form.reset();
@@ -271,7 +304,38 @@ if (form) {
     loginEmail.addEventListener("click", () => {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
-      signInWithEmailAndPassword(auth, email, password).catch(console.error)
+      signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          console.log("logged in as:", userCredential.user.email);
+          window.location.reload();
+        })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessageElement = document.getElementById("login-error");
+    
+        let message = "Login failed. Please try again.";
+    
+        if (errorCode === "auth/user-not-found") {
+          message = "No account found with this email.";
+        } else if (errorCode === "auth/wrong-password") {
+          message = "Incorrect password. Please try again.";
+        } else if (errorCode === "auth/invalid-email") {
+          message = "Please enter a valid email address.";
+        } else if (errorCode === "auth/too-many-requests") {
+          message = "Too many failed attempts. Try again later.";
+        }
+    
+        if (errorMessageElement) {
+          errorMessageElement.textContent = message;
+          errorMessageElement.style.display = "block";
+        } else {
+          alert(message); // fallback
+        }
+    
+        console.warn("Login error:", errorCode);
+      });
+      
+
     });
   };
 
@@ -308,7 +372,26 @@ if (form) {
 
     const editorContainer = document.getElementById("editor");
     const publishBtn  = document.getElementById("publish-post");
+    const saveDraftBtn = document.getElementById("save-draft");
 
+    if (editorContainer&& saveDraftBtn) {
+
+      saveDraftBtn.addEventListener("click", async () => {
+        const title = prompt("Title:");
+        const content = quill.root.innerHTML;
+        const summary = quill.getText().substring(0,300) + "...";
+
+        await addDoc(collection(firebase.db, "posts"), {
+          title, 
+          content, 
+          summary, 
+          createdAt: serverTimestamp(), 
+          author: firebase.auth.currentUser?.display || "Anonymous", 
+          status: "draft"
+        })
+      })
+
+    }
     if(editorContainer && publishBtn) {
       const quill = new Quill('#editor', {
         theme: 'snow'
@@ -325,6 +408,7 @@ if (form) {
           summary,
           createdAt: serverTimestamp(),
           author: firebase.auth.currentUser.displayName,
+          status: "published"
         });
         alert("Post published!");
       });
@@ -375,11 +459,16 @@ if (form) {
     const userGreeting = document.getElementById("user-greeting");
     if (userGreeting) {
       userGreeting.textContent = user ? `welcome, ${user.email}`: ""; 
-
-      console.log("Auth check, user:", user?.email);
-  }
+      
+    }
+    console.log("Auth check, user:", user?.email);
   });
 
-  
+  const loadMoreBtn = document.getElementById("load-more");
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener("click", () => {
+      renderPosts(firebase.auth.currentUser, true);
+    })
+  }
 
   

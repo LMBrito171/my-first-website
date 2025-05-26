@@ -23,31 +23,33 @@
         </ul>
     </nav>
 
-    <div id="auth-controls">
-        <button id="login-google">Login with Google</button>
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Password">
-        <button id="login-email">Login with Email</button>
-    </div>
     
-    <!--
-    <button id="logout" class="hidden"">Logout</button> 
-    <p id="user-greeting"></p>
-    -->
-
-    
-
     <section>
         <h1>Latest News</h1>
-        <div id="blog-posts"></div>
-
+        <div id="drafts-container"></div>
         
-
+        
+        
+        
     </section>
-
     <button id="load-more" style="display: none;">Load More</button>
 
+    
     <Script type="module" src="script.js"></Script>
     <script type="module" src="auth-status.js"></script>
+    <script type="module" src="drafts.js"></script>
 </body>
+
+<!--
+<div id="auth-controls">
+    <button id="login-google">Login with Google</button>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button id="login-email">Login with Email</button>
+</div>
+
+<button id="logout" class="hidden"">Logout</button> 
+<p id="user-greeting"></p>
+-->
+
 </html>

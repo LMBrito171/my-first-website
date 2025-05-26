@@ -6,7 +6,65 @@
   --background-color: #f9f9f9;
   --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
+/* Dropdown auth*/
+#user-menu {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 999;
+}
+#user-menu button#user-toggle {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
 
+#user-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  margin-top: 5px;
+  background: #444;
+  border: 1px solid #000;
+  padding: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  min-width: 180px;
+}
+
+#user-dropdown p {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+}
+
+#logout-btn {
+  background: #d9534f;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+#logout-btn:hover {
+  background: #c9302c;
+}
+
+#user-dropdown input[type="email"],
+#user-dropdown input[type="password"] {
+  width: 100%;
+  margin-bottom: 6px;
+  padding: 6px;
+  font-size: 0.9rem;
+}
+
+#user-dropdown button {
+  width: 100%;
+  margin-bottom: 6px;
+  padding: 6px;
+  font-size: 0.9;
+  cursor: pointer;
+}
 
 /*Base classes*/
 
@@ -75,7 +133,7 @@
   overflow-y: auto;
 }
 
-
+/*Nav bar and section(for texts)*/
 section {
   max-width: 800px;
   margin: 0 auto;
@@ -84,8 +142,13 @@ section {
 }
 
 nav {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 999;
     background-color: var(--primary-color);
-    padding: 10px 0;
+    padding: 10px ;
+    border-radius: 6px;
 }
 
 nav ul {
@@ -108,7 +171,7 @@ nav ul li a:hover {
 }
 
 
-
+/*general styling*/
 body {
     background-color: var(--background-color);
     font-family: var(--font-main);

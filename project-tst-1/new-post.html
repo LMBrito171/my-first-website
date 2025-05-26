@@ -25,14 +25,15 @@
             <li><button id="toggle-theme">Toggle Dark Mode</button></li>
         </ul>
     </nav>
-
-    <div id="auth-controls">
-        <button id="login-google">Login with Google</button>
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Password">
-        <button id="login-email">Login with Email</button>
-        <button id="logout" class="hidden"">Logout</button>
-    </div>
+    <!--
+        <div id="auth-controls">
+            <button id="login-google">Login with Google</button>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <button id="login-email">Login with Email</button>
+            <button id="logout" class="hidden"">Logout</button>
+        </div>
+        -->
 
     <section>
         <h1>Create New Post</h1>
@@ -41,6 +42,7 @@
 
             <div id="editor"></div>
             <button id="publish-post">Publish</button>
+            <button id="save-draft">Save as draft</button>
             
         </div>
         
@@ -58,7 +60,7 @@
     </section>
 
    
-
+    <script type="module" src="auth-status.js"></script>
     <script type="module" src="script.js"></script>
 
 </body>
